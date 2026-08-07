@@ -1,6 +1,18 @@
 import { describe, test, expect, beforeEach } from 'vitest';
 
-import { getInputs } from '../src/input';
+import { getInputs, resolveStatusFromJobResults } from '../src/input';
+
+describe('resolveStatusFromJobResults()', () => {
+  test('picks worst conclusion by priority', () => {
+    expect(resolveStatusFromJobResults(['success', 'failure', 'cancelled'])).toBe('failure');
+    expect(resolveStatusFromJobResults(['skipped', 'timed_out'])).toBe('timed_out');
+    expect(resolveStatusFromJobResults(['success', 'skipped'])).toBe('success');
+  });
+
+  test('returns undefined for empty input', () => {
+    expect(resolveStatusFromJobResults([])).toBeUndefined();
+  });
+});
 
 describe('getInputs()', () => {
   beforeEach(() => {
@@ -19,6 +31,7 @@ describe('getInputs()', () => {
     process.env['INPUT_NODETAIL'] = 'false';
     process.env['INPUT_NOTIMESTAMP'] = 'false';
     process.env['INPUT_ACK_NO_WEBHOOK'] = 'false';
+    process.env['INPUT_MENTION_ON'] = 'always';
   });
 
   test('each field is mapped correctly', () => {
@@ -176,6 +189,44 @@ describe('getInputs()', () => {
     process.env['INPUT_STATUS'] = 'skipped';
     const got = getInputs();
     expect(got.status).toBe('skipped');
+  });
+
+  test.each(['timed_out', 'action_required', 'neutral', 'stale'])('extended status %s is accepted', (status) => {
+    process.env['INPUT_WEBHOOK'] = 'https://input.webhook.invalid';
+    process.env['INPUT_STATUS'] = status;
+    const got = getInputs();
+    expect(got.status).toBe(status);
+  });
+
+  test('job_results overrides status', () => {
+    process.env['INPUT_WEBHOOK'] = 'https://input.webhook.invalid';
+    process.env['INPUT_STATUS'] = 'success';
+    process.env['INPUT_JOB_RESULTS'] = 'success\ncancelled\nfailure';
+    const got = getInputs();
+    expect(got.status).toBe('failure');
+    expect(got.job_results).toEqual(['success', 'cancelled', 'failure']);
+  });
+
+  test('mention_on and content_on_failure are mapped', () => {
+    process.env['INPUT_WEBHOOK'] = 'https://input.webhook.invalid';
+    process.env['INPUT_MENTION_ON'] = 'failure';
+    process.env['INPUT_CONTENT_ON_FAILURE'] = '<@123>';
+    const got = getInputs();
+    expect(got.mention_on).toBe('failure');
+    expect(got.content_on_failure).toBe('<@123>');
+  });
+
+  test('invalid mention_on raises', () => {
+    process.env['INPUT_WEBHOOK'] = 'https://input.webhook.invalid';
+    process.env['INPUT_MENTION_ON'] = 'sometimes';
+    expect(getInputs).toThrow('invalid mention_on value');
+  });
+
+  test('allowed_mentions parses JSON', () => {
+    process.env['INPUT_WEBHOOK'] = 'https://input.webhook.invalid';
+    process.env['INPUT_ALLOWED_MENTIONS'] = '{"parse":[],"users":["1"]}';
+    const got = getInputs();
+    expect(got.allowed_mentions).toEqual({ parse: [], users: ['1'] });
   });
 
   test('invalid status raises', () => {

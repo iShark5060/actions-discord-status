@@ -7,15 +7,25 @@ inputs:
     description: Discord webhook endpoint. If not set, env.DISCORD_WEBHOOK will be used.
     required: false
   status:
-    description: Job status. Should be bound to job.status or workflow conclusion. Default to success.
+    description: Job or workflow conclusion. Ignored when job_results is set. Accepts success, failure, cancelled, skipped, timed_out, action_required, neutral, stale.
     required: false
     default: ${{ job.status }}
+  job_results:
+    description: Newline- or comma-separated job conclusions (e.g. from needs.*.result). When set, the worst result becomes status and overrides the status input.
+    required: false
   job:
     description: Deprecated. Job name included in message title. Same as title input.
     required: false
   content:
-    description: Content shown as a message outside of the embed.
+    description: Content shown as a message outside of the embed (use for @mentions).
     required: false
+  content_on_failure:
+    description: Alternate content used when status is failure-like (failure, timed_out, action_required). Useful with mention_on=failure.
+    required: false
+  mention_on:
+    description: When to include content / content_on_failure. One of always, failure, never. Default always.
+    required: false
+    default: always
   title:
     description: String included in embed title. Overrides job input.
     required: false
@@ -30,7 +40,7 @@ inputs:
     description: Overrides Discord embed color
     required: false
   url:
-    description: URL to jump when the title is clicked
+    description: URL to jump when the title is clicked. Defaults to the workflow run URL.
     required: false
   username:
     description: Overrides Discord webhook username
@@ -62,10 +72,13 @@ inputs:
     description: Suppress error which raised when webhook is not set
     required: false
     default: 'false'
+  allowed_mentions:
+    description: Optional JSON object passed through as Discord allowed_mentions. When omitted, user IDs found in content are allowed automatically.
+    required: false
 
 outputs:
   payload:
-    description: Discord webhook payload
+    description: Discord webhook payload (always set, even when delivery fails)
 
 runs:
   using: node24

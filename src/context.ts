@@ -4,10 +4,12 @@ interface Context {
   payload: { [key: string]: any };
   eventName: string;
   ref: string;
+  sha: string;
   workflow: string;
   actor: string;
   serverUrl: string;
   runId: number;
+  job: string;
   repo: {
     owner: string;
     repo: string;
@@ -42,10 +44,12 @@ export function getContext(): Context {
     payload,
     eventName: process.env.GITHUB_EVENT_NAME || '',
     ref: process.env.GITHUB_REF || '',
+    sha: process.env.GITHUB_SHA || '',
     workflow: process.env.GITHUB_WORKFLOW || '',
     actor: process.env.GITHUB_ACTOR || '',
     serverUrl: process.env.GITHUB_SERVER_URL || 'https://github.com',
     runId: parseInt(process.env.GITHUB_RUN_ID || '0', 10),
+    job: process.env.GITHUB_JOB || '',
     repo: readRepo(payload),
   };
 }

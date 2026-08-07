@@ -1,6 +1,5 @@
 import { describe, test, expect, vi } from 'vitest';
 
-import { formatEvent } from '../src/format';
 import { getPayload } from '../src/index';
 import { Inputs } from '../src/input';
 
@@ -13,9 +12,11 @@ vi.mock('../src/context', async () => {
 
       eventName: 'push',
       ref: 'refs/tags/simple-tag',
+      sha: 'abcdef1234567890',
       workflow: 'push-ci',
       actor: 'Codertocat',
       runId: 123123,
+      job: 'notify',
       serverUrl: 'https://githubactions.serverurl.example.com',
 
       repo: {
@@ -26,9 +27,53 @@ vi.mock('../src/context', async () => {
   };
 });
 
-vi.mock('../src/format');
-const mockedFormatEvent = vi.mocked(formatEvent);
-mockedFormatEvent.mockReturnValue('mocked format event');
+vi.mock('../src/format', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../src/format')>();
+  return {
+    ...actual,
+    formatEvent: vi.fn(() => 'mocked format event'),
+  };
+});
+
+const contextFields = [
+  {
+    name: 'Repository',
+    value: '[Codertocat/Hello-World](https://githubactions.serverurl.example.com/Codertocat/Hello-World)',
+    inline: true,
+  },
+  {
+    name: 'Ref',
+    value: 'simple-tag',
+    inline: true,
+  },
+  {
+    name: 'Event - push',
+    value: 'mocked format event',
+    inline: false,
+  },
+  {
+    name: 'Triggered by',
+    value: 'Codertocat',
+    inline: true,
+  },
+  {
+    name: 'Workflow',
+    value: '[push-ci](https://githubactions.serverurl.example.com/Codertocat/Hello-World/actions/runs/123123)',
+    inline: true,
+  },
+  {
+    name: 'Commit',
+    value: '[`abcdef1`](https://githubactions.serverurl.example.com/Codertocat/Hello-World/commit/abcdef1234567890)',
+    inline: true,
+  },
+  {
+    name: 'Job',
+    value: 'notify',
+    inline: true,
+  },
+];
+
+const defaultRunUrl = 'https://githubactions.serverurl.example.com/Codertocat/Hello-World/actions/runs/123123';
 
 describe('getPayload(Inputs)', () => {
   const baseInputs: Inputs = {
@@ -39,6 +84,8 @@ describe('getPayload(Inputs)', () => {
     status: 'success',
     description: '',
     content: '',
+    content_on_failure: '',
+    mention_on: 'always',
     title: '',
     image: '',
     color: undefined,
@@ -46,6 +93,7 @@ describe('getPayload(Inputs)', () => {
     username: '',
     avatar_url: '',
     ack_no_webhook: false,
+    job_results: [],
   };
 
   test('default', () => {
@@ -58,34 +106,8 @@ describe('getPayload(Inputs)', () => {
           color: 0x28a745,
           timestamp: expect.any(String),
           title: 'Success',
-          fields: [
-            {
-              name: 'Repository',
-              value: '[Codertocat/Hello-World](https://githubactions.serverurl.example.com/Codertocat/Hello-World)',
-              inline: true,
-            },
-            {
-              name: 'Ref',
-              value: 'refs/tags/simple-tag',
-              inline: true,
-            },
-            {
-              name: 'Event - push',
-              value: 'mocked format event',
-              inline: false,
-            },
-            {
-              name: 'Triggered by',
-              value: 'Codertocat',
-              inline: true,
-            },
-            {
-              name: 'Workflow',
-              value:
-                '[push-ci](https://githubactions.serverurl.example.com/Codertocat/Hello-World/actions/runs/123123)',
-              inline: true,
-            },
-          ],
+          url: defaultRunUrl,
+          fields: contextFields,
         },
       ],
     };
@@ -103,6 +125,7 @@ describe('getPayload(Inputs)', () => {
         {
           color: 0x28a745,
           timestamp: expect.any(String),
+          url: defaultRunUrl,
         },
       ],
     };
@@ -122,6 +145,7 @@ describe('getPayload(Inputs)', () => {
           color: 0x28a745,
           timestamp: expect.any(String),
           title: 'nodetail title',
+          url: defaultRunUrl,
         },
       ],
     };
@@ -140,6 +164,7 @@ describe('getPayload(Inputs)', () => {
           color: 0x28a745,
           timestamp: expect.any(String),
           title: 'Success: nocontext title',
+          url: defaultRunUrl,
         },
       ],
     };
@@ -158,6 +183,7 @@ describe('getPayload(Inputs)', () => {
         {
           color: 0x28a745,
           title: 'Success: nocontext title',
+          url: defaultRunUrl,
         },
       ],
     };
@@ -174,34 +200,8 @@ describe('getPayload(Inputs)', () => {
         {
           color: 0x28a745,
           title: 'Success',
-          fields: [
-            {
-              name: 'Repository',
-              value: '[Codertocat/Hello-World](https://githubactions.serverurl.example.com/Codertocat/Hello-World)',
-              inline: true,
-            },
-            {
-              name: 'Ref',
-              value: 'refs/tags/simple-tag',
-              inline: true,
-            },
-            {
-              name: 'Event - push',
-              value: 'mocked format event',
-              inline: false,
-            },
-            {
-              name: 'Triggered by',
-              value: 'Codertocat',
-              inline: true,
-            },
-            {
-              name: 'Workflow',
-              value:
-                '[push-ci](https://githubactions.serverurl.example.com/Codertocat/Hello-World/actions/runs/123123)',
-              inline: true,
-            },
-          ],
+          url: defaultRunUrl,
+          fields: contextFields,
         },
       ],
     };
@@ -220,34 +220,8 @@ describe('getPayload(Inputs)', () => {
           color: 0x28a745,
           timestamp: expect.any(String),
           title: 'noprefix title',
-          fields: [
-            {
-              name: 'Repository',
-              value: '[Codertocat/Hello-World](https://githubactions.serverurl.example.com/Codertocat/Hello-World)',
-              inline: true,
-            },
-            {
-              name: 'Ref',
-              value: 'refs/tags/simple-tag',
-              inline: true,
-            },
-            {
-              name: 'Event - push',
-              value: 'mocked format event',
-              inline: false,
-            },
-            {
-              name: 'Triggered by',
-              value: 'Codertocat',
-              inline: true,
-            },
-            {
-              name: 'Workflow',
-              value:
-                '[push-ci](https://githubactions.serverurl.example.com/Codertocat/Hello-World/actions/runs/123123)',
-              inline: true,
-            },
-          ],
+          url: defaultRunUrl,
+          fields: contextFields,
         },
       ],
     };
@@ -265,35 +239,9 @@ describe('getPayload(Inputs)', () => {
           color: 0x28a745,
           timestamp: expect.any(String),
           title: 'Success',
+          url: defaultRunUrl,
           description: 'description test',
-          fields: [
-            {
-              name: 'Repository',
-              value: '[Codertocat/Hello-World](https://githubactions.serverurl.example.com/Codertocat/Hello-World)',
-              inline: true,
-            },
-            {
-              name: 'Ref',
-              value: 'refs/tags/simple-tag',
-              inline: true,
-            },
-            {
-              name: 'Event - push',
-              value: 'mocked format event',
-              inline: false,
-            },
-            {
-              name: 'Triggered by',
-              value: 'Codertocat',
-              inline: true,
-            },
-            {
-              name: 'Workflow',
-              value:
-                '[push-ci](https://githubactions.serverurl.example.com/Codertocat/Hello-World/actions/runs/123123)',
-              inline: true,
-            },
-          ],
+          fields: contextFields,
         },
       ],
     };
@@ -311,34 +259,8 @@ describe('getPayload(Inputs)', () => {
           color: 0x28a745,
           timestamp: expect.any(String),
           title: 'Success: job test',
-          fields: [
-            {
-              name: 'Repository',
-              value: '[Codertocat/Hello-World](https://githubactions.serverurl.example.com/Codertocat/Hello-World)',
-              inline: true,
-            },
-            {
-              name: 'Ref',
-              value: 'refs/tags/simple-tag',
-              inline: true,
-            },
-            {
-              name: 'Event - push',
-              value: 'mocked format event',
-              inline: false,
-            },
-            {
-              name: 'Triggered by',
-              value: 'Codertocat',
-              inline: true,
-            },
-            {
-              name: 'Workflow',
-              value:
-                '[push-ci](https://githubactions.serverurl.example.com/Codertocat/Hello-World/actions/runs/123123)',
-              inline: true,
-            },
-          ],
+          url: defaultRunUrl,
+          fields: contextFields,
         },
       ],
     };
@@ -358,34 +280,7 @@ describe('getPayload(Inputs)', () => {
           timestamp: expect.any(String),
           title: 'Success: job test',
           url: 'https://example.com',
-          fields: [
-            {
-              name: 'Repository',
-              value: '[Codertocat/Hello-World](https://githubactions.serverurl.example.com/Codertocat/Hello-World)',
-              inline: true,
-            },
-            {
-              name: 'Ref',
-              value: 'refs/tags/simple-tag',
-              inline: true,
-            },
-            {
-              name: 'Event - push',
-              value: 'mocked format event',
-              inline: false,
-            },
-            {
-              name: 'Triggered by',
-              value: 'Codertocat',
-              inline: true,
-            },
-            {
-              name: 'Workflow',
-              value:
-                '[push-ci](https://githubactions.serverurl.example.com/Codertocat/Hello-World/actions/runs/123123)',
-              inline: true,
-            },
-          ],
+          fields: contextFields,
         },
       ],
     };
@@ -403,37 +298,11 @@ describe('getPayload(Inputs)', () => {
           color: 0x28a745,
           timestamp: expect.any(String),
           title: 'Success',
+          url: defaultRunUrl,
           image: {
             url: 'https://example.com/testimage.png',
           },
-          fields: [
-            {
-              name: 'Repository',
-              value: '[Codertocat/Hello-World](https://githubactions.serverurl.example.com/Codertocat/Hello-World)',
-              inline: true,
-            },
-            {
-              name: 'Ref',
-              value: 'refs/tags/simple-tag',
-              inline: true,
-            },
-            {
-              name: 'Event - push',
-              value: 'mocked format event',
-              inline: false,
-            },
-            {
-              name: 'Triggered by',
-              value: 'Codertocat',
-              inline: true,
-            },
-            {
-              name: 'Workflow',
-              value:
-                '[push-ci](https://githubactions.serverurl.example.com/Codertocat/Hello-World/actions/runs/123123)',
-              inline: true,
-            },
-          ],
+          fields: contextFields,
         },
       ],
     };
@@ -451,34 +320,8 @@ describe('getPayload(Inputs)', () => {
           color: 0xfff000,
           timestamp: expect.any(String),
           title: 'Success',
-          fields: [
-            {
-              name: 'Repository',
-              value: '[Codertocat/Hello-World](https://githubactions.serverurl.example.com/Codertocat/Hello-World)',
-              inline: true,
-            },
-            {
-              name: 'Ref',
-              value: 'refs/tags/simple-tag',
-              inline: true,
-            },
-            {
-              name: 'Event - push',
-              value: 'mocked format event',
-              inline: false,
-            },
-            {
-              name: 'Triggered by',
-              value: 'Codertocat',
-              inline: true,
-            },
-            {
-              name: 'Workflow',
-              value:
-                '[push-ci](https://githubactions.serverurl.example.com/Codertocat/Hello-World/actions/runs/123123)',
-              inline: true,
-            },
-          ],
+          url: defaultRunUrl,
+          fields: contextFields,
         },
       ],
     };
@@ -496,34 +339,8 @@ describe('getPayload(Inputs)', () => {
           color: 0xcb2431,
           timestamp: expect.any(String),
           title: 'Failure',
-          fields: [
-            {
-              name: 'Repository',
-              value: '[Codertocat/Hello-World](https://githubactions.serverurl.example.com/Codertocat/Hello-World)',
-              inline: true,
-            },
-            {
-              name: 'Ref',
-              value: 'refs/tags/simple-tag',
-              inline: true,
-            },
-            {
-              name: 'Event - push',
-              value: 'mocked format event',
-              inline: false,
-            },
-            {
-              name: 'Triggered by',
-              value: 'Codertocat',
-              inline: true,
-            },
-            {
-              name: 'Workflow',
-              value:
-                '[push-ci](https://githubactions.serverurl.example.com/Codertocat/Hello-World/actions/runs/123123)',
-              inline: true,
-            },
-          ],
+          url: defaultRunUrl,
+          fields: contextFields,
         },
       ],
     };
@@ -541,34 +358,8 @@ describe('getPayload(Inputs)', () => {
           color: 0,
           timestamp: expect.any(String),
           title: 'Success',
-          fields: [
-            {
-              name: 'Repository',
-              value: '[Codertocat/Hello-World](https://githubactions.serverurl.example.com/Codertocat/Hello-World)',
-              inline: true,
-            },
-            {
-              name: 'Ref',
-              value: 'refs/tags/simple-tag',
-              inline: true,
-            },
-            {
-              name: 'Event - push',
-              value: 'mocked format event',
-              inline: false,
-            },
-            {
-              name: 'Triggered by',
-              value: 'Codertocat',
-              inline: true,
-            },
-            {
-              name: 'Workflow',
-              value:
-                '[push-ci](https://githubactions.serverurl.example.com/Codertocat/Hello-World/actions/runs/123123)',
-              inline: true,
-            },
-          ],
+          url: defaultRunUrl,
+          fields: contextFields,
         },
       ],
     };
@@ -586,34 +377,8 @@ describe('getPayload(Inputs)', () => {
           color: 0x28a745,
           timestamp: expect.any(String),
           title: 'Success',
-          fields: [
-            {
-              name: 'Repository',
-              value: '[Codertocat/Hello-World](https://githubactions.serverurl.example.com/Codertocat/Hello-World)',
-              inline: true,
-            },
-            {
-              name: 'Ref',
-              value: 'refs/tags/simple-tag',
-              inline: true,
-            },
-            {
-              name: 'Event - push',
-              value: 'mocked format event',
-              inline: false,
-            },
-            {
-              name: 'Triggered by',
-              value: 'Codertocat',
-              inline: true,
-            },
-            {
-              name: 'Workflow',
-              value:
-                '[push-ci](https://githubactions.serverurl.example.com/Codertocat/Hello-World/actions/runs/123123)',
-              inline: true,
-            },
-          ],
+          url: defaultRunUrl,
+          fields: contextFields,
         },
       ],
       username: 'username test',
@@ -632,34 +397,8 @@ describe('getPayload(Inputs)', () => {
           color: 0x28a745,
           timestamp: expect.any(String),
           title: 'Success',
-          fields: [
-            {
-              name: 'Repository',
-              value: '[Codertocat/Hello-World](https://githubactions.serverurl.example.com/Codertocat/Hello-World)',
-              inline: true,
-            },
-            {
-              name: 'Ref',
-              value: 'refs/tags/simple-tag',
-              inline: true,
-            },
-            {
-              name: 'Event - push',
-              value: 'mocked format event',
-              inline: false,
-            },
-            {
-              name: 'Triggered by',
-              value: 'Codertocat',
-              inline: true,
-            },
-            {
-              name: 'Workflow',
-              value:
-                '[push-ci](https://githubactions.serverurl.example.com/Codertocat/Hello-World/actions/runs/123123)',
-              inline: true,
-            },
-          ],
+          url: defaultRunUrl,
+          fields: contextFields,
         },
       ],
       avatar_url: 'https://avatar.invalid/avatar.png',
@@ -678,38 +417,35 @@ describe('getPayload(Inputs)', () => {
           color: 0x28a745,
           timestamp: expect.any(String),
           title: 'Success',
-          fields: [
-            {
-              name: 'Repository',
-              value: '[Codertocat/Hello-World](https://githubactions.serverurl.example.com/Codertocat/Hello-World)',
-              inline: true,
-            },
-            {
-              name: 'Ref',
-              value: 'refs/tags/simple-tag',
-              inline: true,
-            },
-            {
-              name: 'Event - push',
-              value: 'mocked format event',
-              inline: false,
-            },
-            {
-              name: 'Triggered by',
-              value: 'Codertocat',
-              inline: true,
-            },
-            {
-              name: 'Workflow',
-              value:
-                '[push-ci](https://githubactions.serverurl.example.com/Codertocat/Hello-World/actions/runs/123123)',
-              inline: true,
-            },
-          ],
+          url: defaultRunUrl,
+          fields: contextFields,
         },
       ],
       content: "hey i'm mentioning <@316911818725392384>",
+      allowed_mentions: { parse: [], users: ['316911818725392384'] },
     };
     expect(getPayload(inputs)).toStrictEqual(want);
+  });
+
+  test('mention_on failure omits content on success', () => {
+    const inputs: Inputs = {
+      ...baseInputs,
+      mention_on: 'failure',
+      content: '<@316911818725392384>',
+    };
+    expect(getPayload(inputs)).not.toHaveProperty('content');
+  });
+
+  test('mention_on failure includes content_on_failure for timed_out', () => {
+    const inputs: Inputs = {
+      ...baseInputs,
+      status: 'timed_out',
+      mention_on: 'failure',
+      content: 'always ping',
+      content_on_failure: '<@316911818725392384> timed out',
+    };
+    const got = getPayload(inputs) as any;
+    expect(got.content).toBe('<@316911818725392384> timed out');
+    expect(got.embeds[0].title).toBe('Timed Out');
   });
 });
