@@ -117,7 +117,7 @@ The action maps GitHub job statuses to Discord embed colors:
 - `Cancelled` / `Action Required` → Yellow
 - `Skipped` / `Neutral` / `Stale` → Gray
 
-Use `job_results` with `join(needs.*.result, '\n')` to aggregate workflow-level conclusions. Use `mention_on: failure` to ping only on failure-like statuses.
+Use `job_results` with `join(needs.*.result, ',')` to aggregate workflow-level conclusions. Use `mention_on: failure` to ping only on failure-like statuses.
 
 ### Event Formatting
 

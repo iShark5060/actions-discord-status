@@ -207,6 +207,25 @@ describe('getInputs()', () => {
     expect(got.job_results).toEqual(['success', 'cancelled', 'failure']);
   });
 
+  // GitHub Actions join(..., '\n') produces a literal backslash-n, not a newline.
+  test('job_results splits literal \\n from join() expressions', () => {
+    process.env['INPUT_WEBHOOK'] = 'https://input.webhook.invalid';
+    process.env['INPUT_STATUS'] = 'cancelled';
+    process.env['INPUT_JOB_RESULTS'] = 'success\\nsuccess';
+    const got = getInputs();
+    expect(got.status).toBe('success');
+    expect(got.job_results).toEqual(['success', 'success']);
+  });
+
+  test('job_results accepts comma-separated values', () => {
+    process.env['INPUT_WEBHOOK'] = 'https://input.webhook.invalid';
+    process.env['INPUT_STATUS'] = 'success';
+    process.env['INPUT_JOB_RESULTS'] = 'success,failure,cancelled';
+    const got = getInputs();
+    expect(got.status).toBe('failure');
+    expect(got.job_results).toEqual(['success', 'failure', 'cancelled']);
+  });
+
   test('mention_on and content_on_failure are mapped', () => {
     process.env['INPUT_WEBHOOK'] = 'https://input.webhook.invalid';
     process.env['INPUT_MENTION_ON'] = 'failure';

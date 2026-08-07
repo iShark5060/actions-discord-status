@@ -38,7 +38,7 @@ discord-status:
     - uses: iShark5060/actions-discord-status@v1
       with:
         webhook: ${{ secrets.DISCORD_WEBHOOK }}
-        job_results: ${{ join(needs.*.result, '\n') }}
+        job_results: ${{ join(needs.*.result, ',') }}
         mention_on: failure
         content: '<@${{ secrets.DISCORD_USERID }}>'
         title: ${{ github.workflow }}
@@ -91,28 +91,28 @@ discord-status:
 
 ## Inputs
 
-| Input                | Required | Default                  | Description                                                                              |
-| -------------------- | -------- | ------------------------ | ---------------------------------------------------------------------------------------- |
-| `webhook`            | No       | `env.DISCORD_WEBHOOK`    | Discord webhook URL. **Do not append `/github` suffix.**                                 |
-| `status`             | No       | `${{ job.status }}`      | Job/workflow conclusion. Ignored when `job_results` is set.                              |
-| `job_results`        | No       | —                        | Newline/comma-separated conclusions; worst result becomes `status`.                      |
-| `content`            | No       | —                        | Message outside the embed (use for `@mentions`).                                         |
-| `content_on_failure` | No       | —                        | Alternate content for failure-like statuses (`failure`, `timed_out`, `action_required`). |
-| `mention_on`         | No       | `always`                 | When to include content: `always`, `failure`, or `never`.                                |
-| `title`              | No       | `${{ github.workflow }}` | Embed title.                                                                             |
-| `description`        | No       | —                        | Embed description.                                                                       |
-| `image`              | No       | —                        | Embed image URL.                                                                         |
-| `color`              | No       | status color             | Embed color as hex (e.g. `0xFFFFFF`).                                                    |
-| `url`                | No       | workflow run URL         | Title link URL.                                                                          |
-| `username`           | No       | —                        | Webhook username override.                                                               |
-| `avatar_url`         | No       | —                        | Webhook avatar override.                                                                 |
-| `allowed_mentions`   | No       | auto from `@user` ids    | Optional Discord `allowed_mentions` JSON object.                                         |
-| `nofail`             | No       | `true`                   | When `false`, webhook failures fail the step.                                            |
-| `nocontext`          | No       | `false`                  | Suppress repository/ref/event fields.                                                    |
-| `noprefix`           | No       | `false`                  | Do not prefix title with status.                                                         |
-| `nodetail`           | No       | `false`                  | Sets both `nocontext` and `noprefix`.                                                    |
-| `notimestamp`        | No       | `false`                  | Omit embed timestamp.                                                                    |
-| `ack_no_webhook`     | No       | `false`                  | Suppress missing-webhook errors.                                                         |
+| Input                | Required | Default                  | Description                                                                                                              |
+| -------------------- | -------- | ------------------------ | ------------------------------------------------------------------------------------------------------------------------ |
+| `webhook`            | No       | `env.DISCORD_WEBHOOK`    | Discord webhook URL. **Do not append `/github` suffix.**                                                                 |
+| `status`             | No       | `${{ job.status }}`      | Job/workflow conclusion. Ignored when `job_results` is set.                                                              |
+| `job_results`        | No       | —                        | Comma- or newline-separated conclusions (literal `\n` from `join(..., '\n')` also works); worst result becomes `status`. |
+| `content`            | No       | —                        | Message outside the embed (use for `@mentions`).                                                                         |
+| `content_on_failure` | No       | —                        | Alternate content for failure-like statuses (`failure`, `timed_out`, `action_required`).                                 |
+| `mention_on`         | No       | `always`                 | When to include content: `always`, `failure`, or `never`.                                                                |
+| `title`              | No       | `${{ github.workflow }}` | Embed title.                                                                                                             |
+| `description`        | No       | —                        | Embed description.                                                                                                       |
+| `image`              | No       | —                        | Embed image URL.                                                                                                         |
+| `color`              | No       | status color             | Embed color as hex (e.g. `0xFFFFFF`).                                                                                    |
+| `url`                | No       | workflow run URL         | Title link URL.                                                                                                          |
+| `username`           | No       | —                        | Webhook username override.                                                                                               |
+| `avatar_url`         | No       | —                        | Webhook avatar override.                                                                                                 |
+| `allowed_mentions`   | No       | auto from `@user` ids    | Optional Discord `allowed_mentions` JSON object.                                                                         |
+| `nofail`             | No       | `true`                   | When `false`, webhook failures fail the step.                                                                            |
+| `nocontext`          | No       | `false`                  | Suppress repository/ref/event fields.                                                                                    |
+| `noprefix`           | No       | `false`                  | Do not prefix title with status.                                                                                         |
+| `nodetail`           | No       | `false`                  | Sets both `nocontext` and `noprefix`.                                                                                    |
+| `notimestamp`        | No       | `false`                  | Omit embed timestamp.                                                                                                    |
+| `ack_no_webhook`     | No       | `false`                  | Suppress missing-webhook errors.                                                                                         |
 
 Accepted `status` / `job_results` values: `success`, `failure`, `cancelled`, `skipped`, `timed_out`, `action_required`, `neutral`, `stale`.
 

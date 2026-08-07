@@ -91,8 +91,14 @@ export function resolveStatusFromJobResults(results: string[]): string | undefin
   return jobResultPriority.find((p) => normalized.includes(p)) ?? normalized[0];
 }
 
+/**
+ * Split job_results on newlines, commas, or literal `\n` sequences.
+ * GitHub Actions `join(needs.*.result, '\n')` uses a literal backslash-n
+ * (expression strings do not expand escape sequences).
+ */
 function parseJobResults(raw: string): string[] {
   return raw
+    .replace(/\\n/g, '\n')
     .split(/[\n,]+/)
     .map((r) => r.trim().toLowerCase())
     .filter(Boolean);
