@@ -113,9 +113,11 @@ After running your workflow, check your Discord channel for the status embed.
 The action maps GitHub job statuses to Discord embed colors:
 
 - `Success` → Green (0x28A745)
-- `Failure` → Red (0xDC3545)
-- `Cancelled` → Gray (0x6C757D)
-- `Skipped` → Light Gray (0x6C757D)
+- `Failure` / `Timed Out` → Red
+- `Cancelled` / `Action Required` → Yellow
+- `Skipped` / `Neutral` / `Stale` → Gray
+
+Use `job_results` with `join(needs.*.result, '\n')` to aggregate workflow-level conclusions. Use `mention_on: failure` to ping only on failure-like statuses.
 
 ### Event Formatting
 

@@ -1,6 +1,6 @@
 import { describe, test, expect } from 'vitest';
 
-import { formatEvent } from '../src/format';
+import { formatEvent, formatRef } from '../src/format';
 import pull_request from './payload/pull_request.json';
 import push_branch from './payload/push_branch.json';
 import push_tag from './payload/push_tag.json';
@@ -8,6 +8,14 @@ import release from './payload/release/release.json';
 import release_nobody from './payload/release/release_nobody.json';
 import release_noname from './payload/release/release_noname.json';
 import release_noname_nobody from './payload/release/release_noname_nobody.json';
+
+describe('formatRef', () => {
+  test('strips refs/heads and refs/tags', () => {
+    expect(formatRef('refs/heads/main')).toBe('main');
+    expect(formatRef('refs/tags/v1.2.3')).toBe('v1.2.3');
+    expect(formatRef('main')).toBe('main');
+  });
+});
 
 describe('formatEvent(event, payload)', () => {
   test('no formatter', () => {
@@ -52,5 +60,33 @@ describe('formatEvent(event, payload)', () => {
   test('release nobody', () => {
     const got = formatEvent('release', release_nobody);
     expect(got).toBe('**Release v1**');
+  });
+
+  test('workflow_dispatch', () => {
+    const got = formatEvent('workflow_dispatch', { inputs: { version: '1.2.3', draft: false } });
+    expect(got).toBe('`version`: 1.2.3\n`draft`: false');
+  });
+
+  test('schedule', () => {
+    expect(formatEvent('schedule', { schedule: '0 0 * * *' })).toBe('Scheduled run (`0 0 * * *`)');
+  });
+
+  test('workflow_run', () => {
+    const got = formatEvent('workflow_run', {
+      workflow_run: {
+        name: 'CI',
+        conclusion: 'success',
+        html_url: 'https://github.com/org/repo/actions/runs/1',
+      },
+    });
+    expect(got).toBe('[CI (success)](https://github.com/org/repo/actions/runs/1)');
+  });
+
+  test('issues', () => {
+    const got = formatEvent('issues', {
+      action: 'opened',
+      issue: { number: 7, title: 'Bug', html_url: 'https://github.com/org/repo/issues/7' },
+    });
+    expect(got).toBe('opened [`#7`](https://github.com/org/repo/issues/7) Bug');
   });
 });
