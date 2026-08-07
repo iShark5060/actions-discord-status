@@ -11,7 +11,7 @@ inputs:
     required: false
     default: ${{ job.status }}
   job_results:
-    description: Newline- or comma-separated job conclusions (e.g. from needs.*.result). When set, the worst result becomes status and overrides the status input.
+    description: Comma- or newline-separated job conclusions (e.g. from needs.*.result). Literal `\n` from join(..., '\n') is also accepted. When set, the worst result becomes status and overrides the status input.
     required: false
   job:
     description: Deprecated. Job name included in message title. Same as title input.
