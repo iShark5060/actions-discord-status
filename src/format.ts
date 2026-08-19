@@ -26,7 +26,6 @@ export function formatEvent(event: string, payload: object): string {
   return msg;
 }
 
-/** Pretty-print refs/heads/foo → foo, refs/tags/v1 → v1. */
 export function formatRef(ref: string): string {
   if (ref.startsWith('refs/heads/')) {
     return ref.slice('refs/heads/'.length);

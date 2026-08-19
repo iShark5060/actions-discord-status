@@ -65,13 +65,8 @@ export const statusOpts: Record<string, StatusOption> = {
   },
 };
 
-/** Statuses that should trigger failure-only mentions / content_on_failure. */
 export const failureLikeStatuses = new Set(['failure', 'timed_out', 'action_required']);
 
-/**
- * Priority used when aggregating multiple job conclusions (worst first).
- * Matches common workflow_run / needs.*.result aggregation patterns.
- */
 export const jobResultPriority = [
   'failure',
   'timed_out',
@@ -91,11 +86,6 @@ export function resolveStatusFromJobResults(results: string[]): string | undefin
   return jobResultPriority.find((p) => normalized.includes(p)) ?? normalized[0];
 }
 
-/**
- * Split job_results on newlines, commas, or literal `\n` sequences.
- * GitHub Actions `join(needs.*.result, '\n')` uses a literal backslash-n
- * (expression strings do not expand escape sequences).
- */
 function parseJobResults(raw: string): string[] {
   return raw
     .replace(/\\n/g, '\n')
@@ -129,7 +119,6 @@ function parseAllowedMentions(raw: string): object | undefined {
   }
 }
 
-/** Extract Discord user IDs from <@id> / <@!id> mention markup. */
 export function extractMentionedUserIds(content: string): string[] {
   const ids = new Set<string>();
   const re = /<@!?(\d+)>/g;
@@ -166,13 +155,10 @@ export function resolveContent(inputs: {
 }
 
 export function getInputs(): Inputs {
-  // webhook
   const webhook: string = core.getInput('webhook').trim() || process.env.DISCORD_WEBHOOK || '';
   const webhooks: string[] = webhook.split('\n').filter((x) => x || false);
-  // prevent webhooks from leak
   webhooks.forEach((w, i) => {
     core.setSecret(w);
-    // if webhook has `/github` suffix, warn them (do not auto-fix)
     if (w.endsWith('/github')) {
       logWarning(
         `webhook ${i + 1}/${webhooks.length} has \`/github\` suffix! This may cause errors.`,
@@ -180,7 +166,6 @@ export function getInputs(): Inputs {
     }
   });
 
-  // nodetail -> nocontext, noprefix
   const nodetail = stob(core.getInput('nodetail'));
   const nocontext = nodetail || stob(core.getInput('nocontext'));
   const noprefix = nodetail || stob(core.getInput('noprefix'));
@@ -211,7 +196,6 @@ export function getInputs(): Inputs {
     job_results,
   };
 
-  // validate
   if (!inputs.webhooks.length && !inputs.ack_no_webhook) {
     throw new Error(
       'No webhook is given. If this is intended, you can suppress this error by setting `ack_no_webhook` to `true`.',

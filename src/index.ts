@@ -21,7 +21,6 @@ async function run() {
     logInfo(payloadStr);
     endGroup();
 
-    // Always expose payload so later steps can recover / re-POST even if delivery fails.
     setOutput('payload', payloadStr);
 
     if (!inputs.webhooks.length) {
@@ -72,7 +71,6 @@ function buildAllowedMentions(inputs: Readonly<Inputs>, content: string): object
   if (!users.length) {
     return undefined;
   }
-  // Explicitly allow mentioned users so pings are reliable across Discord webhook defaults.
   return { parse: [], users };
 }
 
@@ -97,12 +95,10 @@ export function getPayload(inputs: Readonly<Inputs>): object {
     embed.timestamp = new Date().toISOString();
   }
 
-  // title
   if (inputs.title) {
     embed.title = inputs.title;
   }
 
-  // Default title URL to the workflow run when callers omit `url`.
   const titleUrl = inputs.url || workflowURL;
   if (titleUrl) {
     embed.url = titleUrl;
@@ -194,8 +190,6 @@ export function getPayload(inputs: Readonly<Inputs>): object {
   return discord_payload;
 }
 
-// Skip auto-execution under the test runner so importing this module for unit
-// tests does not trigger a real webhook run.
 if (!process.env.VITEST) {
   run();
 }

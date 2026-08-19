@@ -16,13 +16,11 @@ describe('resolveStatusFromJobResults()', () => {
 
 describe('getInputs()', () => {
   beforeEach(() => {
-    // do we have more convenient way?
     for (const prop in process.env) {
       if (prop.startsWith('INPUT_')) delete process.env[prop];
     }
     delete process.env['DISCORD_WEBHOOK'];
 
-    // see action.yml for default values
     process.env['INPUT_STATUS'] = 'success';
     process.env['INPUT_TITLE'] = 'github actions';
     process.env['INPUT_NOFAIL'] = 'true';
@@ -35,7 +33,6 @@ describe('getInputs()', () => {
   });
 
   test('each field is mapped correctly', () => {
-    // list all fields in Inputs type
     process.env['INPUT_WEBHOOK'] = 'https://env.webhook.invalid';
     process.env['INPUT_STATUS'] = 'failure';
     process.env['INPUT_CONTENT'] = 'content text';
@@ -207,7 +204,6 @@ describe('getInputs()', () => {
     expect(got.job_results).toEqual(['success', 'cancelled', 'failure']);
   });
 
-  // GitHub Actions join(..., '\n') produces a literal backslash-n, not a newline.
   test('job_results splits literal \\n from join() expressions', () => {
     process.env['INPUT_WEBHOOK'] = 'https://input.webhook.invalid';
     process.env['INPUT_STATUS'] = 'cancelled';

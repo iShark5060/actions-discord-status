@@ -35,9 +35,6 @@ function readRepo(payload: { [key: string]: any }): { owner: string; repo: strin
   return { owner: '', repo: '' };
 }
 
-// Minimal replacement for `@actions/github`'s `context`, reading only the
-// fields this action needs directly from the runner environment. This avoids
-// pulling in the whole Octokit dependency tree just to read context.
 export function getContext(): Context {
   const payload = readPayload();
   return {

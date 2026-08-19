@@ -3,7 +3,6 @@ import { describe, test, expect, vi } from 'vitest';
 import { getPayload } from '../src/index';
 import { Inputs } from '../src/input';
 
-// see https://docs.github.com/en/actions/learn-github-actions/contexts#github-context
 vi.mock('../src/context', async () => {
   const payload = (await import('./payload/push_tag.json')).default;
   return {
