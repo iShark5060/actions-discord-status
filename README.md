@@ -144,7 +144,7 @@ Do not append `/github` to your webhook URL.
 
 ## Requirements
 
-- Node.js 24+
+- Node.js 26+
 - pnpm 12+
 
 ## Scripts
