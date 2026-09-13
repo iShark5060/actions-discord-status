@@ -6,7 +6,9 @@
 ![TypeScript](https://img.shields.io/badge/TypeScript-7.x-3178C6?logo=typescript&logoColor=white&style=flat-square)
 [![Cursor](https://img.shields.io/badge/Cursor-IDE-141414?logo=cursor&logoColor=white&style=flat-square)](https://cursor.com)
 
-Posts GitHub Actions job status to Discord as embeds. Maintained fork of [sarisia/actions-status-discord](https://github.com/sarisia/actions-status-discord).
+Post GitHub Actions job status to Discord as embeds. One step at the end of a workflow, a webhook, and you get a card instead of opening the Actions tab.
+
+This is a maintained fork of [sarisia/actions-status-discord](https://github.com/sarisia/actions-status-discord) by Sarisia (MIT License). I keep it because the DAL apps all ping the same Discord channel this way.
 
 ![Discord embed example](https://user-images.githubusercontent.com/33576079/212482263-31456af9-6a9f-4110-82ad-cd3df738bddb.png)
 
