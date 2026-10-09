@@ -10,7 +10,7 @@ Posts GitHub Actions job/workflow status to Discord webhooks as embeds. Maintain
 
 ## Delivery
 
-Bundled `dist/index.js` exists only on release tags. Consumers must use `@v1`, not `@main`. Do **not** append `/github` to Discord webhook URLs (that endpoint expects a different payload shape).
+Source is ESM (`"type": "module"`); the published Action entry must stay **CJS** (`dist/index.cjs`). Do not switch the bundle to ESM. `dist/index.cjs` exists only on release tags. Consumers must use `@v1`, not `@main`. Do **not** append `/github` to Discord webhook URLs (that endpoint expects a different payload shape).
 
 When `job_results` is set, it overrides `status`. Worst conclusion uses a fixed priority (`failure` > `timed_out` > `cancelled` > `action_required` > …). Literal `\n` from `join(..., '\n')` is accepted.
 

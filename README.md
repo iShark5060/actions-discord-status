@@ -31,7 +31,7 @@ Inputs live in `action.yml`.
 
 ## Gotchas
 
-- Reference a **published tag** (`@v1`). `dist/index.js` is only on release tags; `@main` will not work.
+- Reference a **published tag** (`@v1`). `dist/index.cjs` is only on release tags; `@main` will not work.
 - Do **not** append `/github` to the webhook URL. That endpoint expects a different payload (`sender` is required) and returns 400.
 - `job_results` overrides `status`. Worst result wins (`failure` > `timed_out` > `cancelled` > …). `mention_on: failure` covers `failure`, `timed_out`, and `action_required` — not `cancelled`.
 - Default `nofail: true`, so a Discord outage does not fail the step. `payload` is still set. Multiple webhooks are newline-separated; one failure does not cancel the others.
