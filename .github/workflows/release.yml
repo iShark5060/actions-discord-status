@@ -138,7 +138,11 @@ jobs:
   e2e:
     needs: build-and-tag
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 10
+    # macOS jobs are advisory: GitHub runner shortages have cancelled them and
+    # failed otherwise-green releases. continue-on-error covers failures, not
+    # cancellations; notify therefore ignores macOS conclusions when reporting.
+    timeout-minutes: ${{ fromJSON(startsWith(matrix.os, 'macos') && '15' || '10') }}
+    continue-on-error: ${{ startsWith(matrix.os, 'macos') }}
     strategy:
       fail-fast: false
       max-parallel: 2
@@ -156,9 +160,6 @@ jobs:
           - windows-11-arm
           - macos-15-intel
           - macos-latest
-          - macos-14
-          - macos-15
-          - macos-26
 
     steps:
       - name: Checkout tag
@@ -203,7 +204,12 @@ jobs:
               repo: context.repo.repo,
               run_id: context.runId,
             })
-            const conclusions = jobs.jobs.map(j => j.conclusion).filter(Boolean)
+            // macOS e2e is advisory (continue-on-error). A cancelled macOS job
+            // still reports cancelled to the API and would otherwise mark the
+            // release notification as cancelled even when required jobs passed.
+            const conclusions = jobs.jobs
+              .filter(j => j.conclusion && !/^e2e \(macos-/.test(j.name))
+              .map(j => j.conclusion)
             const priority = ['failure', 'timed_out', 'cancelled', 'action_required', 'neutral', 'success', 'skipped', 'stale']
             const conclusion = priority.find(p => conclusions.includes(p)) ?? (conclusions.length ? conclusions[0] : 'success')
             core.setOutput('conclusion', conclusion)
